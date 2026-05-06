@@ -38,7 +38,7 @@
     .app {
       height: 100%;
       display: grid;
-      grid-template-rows: auto auto auto 1fr;
+      grid-template-rows: auto auto 1fr;
       gap: 10px;
       padding: 12px;
     }
@@ -97,6 +97,65 @@
       cursor: pointer;
     }
 
+    .controls .action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      appearance: none;
+      -webkit-appearance: none;
+      border: 2px solid #8b9ad3;
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px 12px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      line-height: 1;
+      height: 40px;
+      text-decoration: none;
+      color: var(--ink);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .controls .action:active {
+      transform: translateY(1px);
+      filter: brightness(0.98);
+    }
+
+    .controls .action:focus-visible {
+      outline: 3px solid #a5b4fc;
+      outline-offset: 2px;
+    }
+
+    .controls .action.is-active {
+      background: linear-gradient(90deg, #ff7ab6, #ffb347);
+      border-color: #ef5da8;
+      color: #241142;
+    }
+
+    .controls label.toggle {
+      position: relative;
+    }
+
+    .controls label.toggle input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .controls label.toggle span {
+      pointer-events: none;
+    }
+
+    .controls label.toggle:focus-within {
+      outline: 3px solid #a5b4fc;
+      outline-offset: 2px;
+    }
+
     .presentation {
       display: none;
       margin-top: 8px;
@@ -122,8 +181,8 @@
       border: 2px solid #a5b4fc;
       background: var(--chip);
       border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 22px;
+      padding: 10px 16px;
+      font-size: 26px;
       font-weight: 800;
       cursor: pointer;
       transition: transform 120ms ease;
@@ -155,6 +214,50 @@
       color: var(--ink);
       cursor: pointer;
       white-space: nowrap;
+    }
+
+    .guide-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .copy-btn {
+      border: 2px solid #a5b4fc;
+      background: #fff;
+      border-radius: 10px;
+      padding: 7px 11px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .copy-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .copy-btn.hide {
+      display: none;
+    }
+
+    .copy-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .copy-btn {
+      padding: 12px 18px;
+      font-size: 18px;
+      border-width: 3px;
+      border-color: #ef5da8;
+      background: linear-gradient(90deg, #ff7ab6, #ffb347);
+      color: #241142;
+      min-width: min(420px, 92vw);
     }
 
     .stage-wrap {
@@ -295,9 +398,9 @@
         <p class="small">Svensk PC-layout. Klicka pa tangenter eller tryck pa ditt riktiga tangentbord.</p>
       </div>
       <div class="controls">
-        <label><input type="checkbox" id="presentationToggle" /> Presentation</label>
-        <button id="fullscreenBtn">Fullscreen</button>
-        <a href="mac.html">GA TILL MAC</a>
+        <label class="action toggle" aria-pressed="false"><input type="checkbox" id="presentationToggle" /><span>Presentation</span></label>
+        <button id="fullscreenBtn" class="action" type="button">Fullscreen</button>
+        <a class="action" href="mac.html">GA TILL MAC</a>
       </div>
       <div id="presentation" class="presentation">MELLANSLAG</div>
     </div>
@@ -305,7 +408,13 @@
     <div class="guide">
       <div class="guide-head">
         <div class="chips" id="symbolChips"></div>
-        <button id="resetCombosBtn" class="reset-btn">Rensa kombinationer</button>
+        <div class="guide-actions">
+          <button id="resetCombosBtn" class="reset-btn" type="button">Rensa</button>
+        </div>
+      </div>
+
+      <div class="copy-row">
+        <button id="copySymbolBtn" class="copy-btn hide" type="button">Kopiera</button>
       </div>
     </div>
 
@@ -433,6 +542,54 @@
       aliases: new Map()
     };
 
+    function setFullscreenButtonState() {
+      const btn = document.getElementById("fullscreenBtn");
+      if (!btn) return;
+      const active = Boolean(document.fullscreenElement);
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+
+    function setCopyButtonState() {
+      const btn = document.getElementById("copySymbolBtn");
+      if (!btn) return;
+      const hasSymbol = Boolean(state.selectedSymbol);
+      btn.classList.toggle("hide", !hasSymbol);
+      btn.disabled = !hasSymbol;
+      if (hasSymbol) btn.textContent = `Kopiera ${state.selectedSymbol}`;
+    }
+
+    async function copySelectedSymbol() {
+      if (!state.selectedSymbol) return;
+      const text = state.selectedSymbol;
+      const btn = document.getElementById("copySymbolBtn");
+      if (!btn) return;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "");
+          ta.style.position = "fixed";
+          ta.style.left = "-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        }
+        btn.textContent = "Kopierad!";
+        setTimeout(() => {
+          if (state.selectedSymbol) setCopyButtonState();
+        }, 900);
+      } catch {
+        btn.textContent = "Kunde inte kopiera";
+        setTimeout(() => {
+          if (state.selectedSymbol) setCopyButtonState();
+        }, 1200);
+      }
+    }
+
     function makeKeyButton(def) {
       const key = document.createElement("button");
       key.type = "button";
@@ -549,6 +706,7 @@
           const comboText = item.keys.map((code) => keyName(code)).join(" + ");
           document.getElementById("selectedLabel").textContent = `Vald tangent: ${comboText}`;
           document.getElementById("presentation").textContent = comboText.toUpperCase();
+          setCopyButtonState();
         });
         root.appendChild(b);
       });
@@ -572,12 +730,14 @@
       document.querySelectorAll(".key.pressed").forEach((k) => k.classList.remove("pressed"));
       document.getElementById("selectedLabel").textContent = "Vald tangent: Ingen";
       document.getElementById("presentation").textContent = "INGEN";
+      setCopyButtonState();
     }
 
     function clearActiveComboOnly() {
       state.selectedSymbol = null;
       document.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
       document.querySelectorAll(".key.combo").forEach((k) => k.classList.remove("combo"));
+      setCopyButtonState();
     }
 
     function updateScale() {
@@ -601,13 +761,26 @@
             else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
           }
           updateScale();
+          setFullscreenButtonState();
         } catch (err) {
           document.getElementById("selectedLabel").textContent = "Vald tangent: Fullscreen blockerad";
         }
       });
 
+      document.addEventListener("fullscreenchange", setFullscreenButtonState);
+
+      document.getElementById("copySymbolBtn").addEventListener("click", () => {
+        copySelectedSymbol();
+      });
+
       document.getElementById("presentationToggle").addEventListener("change", (e) => {
-        document.getElementById("presentation").classList.toggle("show", e.target.checked);
+        const checked = e.target.checked;
+        document.getElementById("presentation").classList.toggle("show", checked);
+        const label = e.target.closest("label");
+        if (label) {
+          label.classList.toggle("is-active", checked);
+          label.setAttribute("aria-pressed", checked ? "true" : "false");
+        }
         updateScale();
       });
 
@@ -639,6 +812,16 @@
     addSymbolChips();
     setupEvents();
     updateScale();
+    setFullscreenButtonState();
+    setCopyButtonState();
+    const pt = document.getElementById("presentationToggle");
+    if (pt) {
+      const label = pt.closest("label");
+      if (label) {
+        label.classList.toggle("is-active", pt.checked);
+        label.setAttribute("aria-pressed", pt.checked ? "true" : "false");
+      }
+    }
   </script>
 </body>
 </html>
