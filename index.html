@@ -56,24 +56,41 @@
       grid-template-columns: 1fr auto;
       gap: 10px;
       align-items: center;
+      padding: 14px;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(24px, 4vw, 40px);
+      font-size: clamp(28px, 4vw, 46px);
       line-height: 1.1;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .logo {
+      width: 92px;
+      height: 92px;
+      object-fit: contain;
+      flex: none;
+      border-radius: 14px;
+      background: #fff;
+      border: 2px solid #ffffff66;
     }
 
     .small {
       margin: 2px 0 0;
-      font-size: 16px;
+      font-size: 18px;
       opacity: 0.9;
     }
 
     .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
       justify-content: flex-end;
     }
 
@@ -108,11 +125,11 @@
       border-radius: 10px;
       background: #fff;
       padding: 8px 12px;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       font-family: inherit;
       line-height: 1;
-      height: 40px;
+      height: 46px;
       text-decoration: none;
       color: var(--ink);
       cursor: pointer;
@@ -394,8 +411,13 @@
   <div class="app">
     <div class="top">
       <div>
-        <h1 id="selectedLabel">Vald tangent: Mellanslag</h1>
-        <p class="small">Svensk PC-layout. Klicka pa tangenter eller tryck pa ditt riktiga tangentbord.</p>
+        <div class="brand">
+          <img class="logo" src="logo.png" alt="Logo" onerror="this.style.display='none'" />
+          <div>
+            <h1 id="selectedLabel">Vald tangent: Mellanslag</h1>
+            <p class="small">Svensk PC-layout. Klicka pa tangenter eller tryck pa ditt riktiga tangentbord.</p>
+          </div>
+        </div>
       </div>
       <div class="controls">
         <label class="action toggle" aria-pressed="false"><input type="checkbox" id="presentationToggle" /><span>Presentation</span></label>
